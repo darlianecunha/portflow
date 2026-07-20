@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PortFlow Brasil | Brazilian Port Movement Analytics</title>
+    <meta name="description" content="Interactive analytics of Brazilian port cargo movement 2010-2025: exports, imports, trade partners, cargo profiles, navigation types and state flows, based on official ANTAQ data.">
+    <meta name="author" content="Darliane Ribeiro Cunha, PhD">
+    <meta name="theme-color" content="#020617">
+    <meta property="og:title" content="PortFlow Brasil | Brazilian Port Movement Analytics">
+    <meta property="og:description" content="Interactive analytics of Brazilian port cargo movement 2010-2025: exports, imports, trade partners, cargo profiles, navigation types and state flows, based on official ANTAQ data.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://portflow-site.vercel.app/">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23020617'/%3E%3Cpath d='M8 42c6 0 6 6 12 6s6-6 12-6 6 6 12 6 6-6 12-6' stroke='%2300bfc0' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='22' r='9' fill='%23e2bf76'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Source+Sans+3:wght@300;400;500;600;700;800&family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .gradient-header {
+            background: linear-gradient(135deg, #010312 0%, #020617 45%, #073c42 100%);
+        }
+        body { font-family: 'Source Sans 3', -apple-system, sans-serif; background: linear-gradient(180deg, #eef7f8 0%, #ffffff 40%) !important; color: #13343b; }
+        h1, h2 { font-family: 'Crimson Pro', Georgia, serif; }
+        h3 { font-family: 'DM Sans', sans-serif; }
+        .bg-blue-900 { background-color: #020617 !important; }
+        .text-blue-900 { color: #020617 !important; }
+        .border-blue-900 { border-color: #0a8f93 !important; }
+        .text-emerald-600 { color: #20b46b !important; }
+        .border-emerald-600 { border-color: #20b46b !important; }
+        .text-blue-500 { color: #0a8f93 !important; }
+        .border-blue-500 { border-color: #00bfc0 !important; }
+        .text-teal-600 { color: #9c7c33 !important; }
+        .border-teal-600 { border-color: #e2bf76 !important; }
+        .bg-gray-900 { background-color: #020617 !important; }
+        a.credit { color: #00bfc0; font-weight: 600; text-decoration: none; }
+        .wave-decoration {
+            overflow: hidden;
+        }
+        .wave-decoration svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-white min-h-screen">
+    <!-- HEADER -->
+    <header class="gradient-header text-white pb-12">
+        <div class="max-w-7xl mx-auto px-6 pt-12">
+            <h1 class="text-4xl font-bold mb-2">
+                <span style="font-size: 2rem;">⚓</span> PortFlow Brasil
+            </h1>
+            <p class="text-xl font-light mb-1">Brazilian Port Movement Analytics | 2010-2025</p>
+            <p class="text-sm opacity-80">Source: ANTAQ</p>
+        </div>
+        <div class="wave-decoration mt-8">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,64L50,69.3C100,75,200,85,300,85.3C400,85,500,75,600,69.3C700,64,800,64,900,64C1000,64,1100,64,1150,64L1200,64L1200,120L1150,120C1100,120,1000,120,900,120C800,120,700,120,600,120C500,120,400,120,300,120C200,120,100,120,50,120L0,120Z" fill="white" opacity="0.1"></path>
+            </svg>
+        </div>
+    </header>
+
+    <!-- TAB NAVIGATION -->
+    <div class="max-w-7xl mx-auto px-6 mt-8">
+        <nav class="flex gap-2 mb-8 flex-wrap">
+            <button class="tab-btn bg-blue-900 text-white px-6 py-3 rounded-lg font-semibold shadow-md transition-all" id="btn-overview" onclick="switchTab('overview')">
+                Overview
+            </button>
+            <button class="tab-btn bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all" id="btn-temporal" onclick="switchTab('temporal')">
+                Temporal Evolution
+            </button>
+            <button class="tab-btn bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all" id="btn-exports" onclick="switchTab('exports')">
+                Exports
+            </button>
+            <button class="tab-btn bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all" id="btn-imports" onclick="switchTab('imports')">
+                Imports
+            </button>
+            <button class="tab-btn bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all" id="btn-states" onclick="switchTab('states')">
+                State Analysis
+            </button>
+            <button class="tab-btn bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all" id="btn-insights" onclick="switchTab('insights')">
+                Trade Insights
+            </button>
+        </nav>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6">
+        <!-- TAB 1: OVERVIEW -->
+        <section id="overview" class="tab-content">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-900">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">TOTAL 2025</h3>
+                    <p class="text-3xl font-bold text-blue-900 mb-2">1,405.1 Mt</p>
+                    <p class="text-xs text-gray-500">Record year for Brazilian ports</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-emerald-600">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">YoY CHANGE</h3>
+                    <p class="text-3xl font-bold text-emerald-600 mb-2">+16.1%</p>
+                    <p class="text-xs text-gray-500">vs 2024 (1,210.3 Mt)</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">EXPORTS 2025</h3>
+                    <p class="text-3xl font-bold text-blue-500 mb-2">948.2 Mt</p>
+                    <p class="text-xs text-gray-500">Outbound cargo</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-teal-600">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">IMPORTS 2025</h3>
+                    <p class="text-3xl font-bold text-teal-600 mb-2">456.9 Mt</p>
+                    <p class="text-xs text-gray-500">Inbound cargo</p>
+                </div>
+            </div>
+
+            <!-- Doughnut Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Cargo Profile 2025</h3>
+                    <div style="height: 350px;">
+                        <canvas id="cargoChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Navigation Type 2025</h3>
+                    <div style="height: 350px;">
+                        <canvas id="navChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Line Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Total Port Movement (2010-2025)</h3>
+                <div style="height: 350px;">
+                    <canvas id="overviewLineChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: TEMPORAL EVOLUTION -->
+        <section id="temporal" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Movement by Cargo Type</h3>
+                    <div style="height: 350px;">
+                        <canvas id="cargoTypeChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Exports vs Imports</h3>
+                    <div style="height: 350px;">
+                        <canvas id="sentidoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Organised Port vs Private Terminal</h3>
+                    <div style="height: 350px;">
+                        <canvas id="instChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Navigation Types (2010-2025)</h3>
+                    <div style="height: 350px;">
+                        <canvas id="navTypesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: EXPORTS -->
+        <section id="exports" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-900">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">DESTINATION COUNTRIES</h3>
+                    <p class="text-3xl font-bold text-blue-900">202</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">TOP PARTNER</h3>
+                    <p class="text-3xl font-bold text-blue-500">China</p>
+                    <p class="text-xs text-gray-500">4.7B+ tonnes</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Top 20 Export Destination Countries</h3>
+                <div style="height: 600px;">
+                    <canvas id="topExportChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Top 5 Export Partners (2010-2025)</h3>
+                <div style="height: 350px;">
+                    <canvas id="exportTrendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: IMPORTS -->
+        <section id="imports" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-900">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">ORIGIN COUNTRIES</h3>
+                    <p class="text-3xl font-bold text-blue-900">197</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">TOP SUPPLIER</h3>
+                    <p class="text-3xl font-bold text-blue-500">United States</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Top 20 Import Origin Countries</h3>
+                <div style="height: 600px;">
+                    <canvas id="topImportChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Top 5 Import Partners (2010-2025)</h3>
+                <div style="height: 350px;">
+                    <canvas id="importTrendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: STATE ANALYSIS -->
+        <section id="states" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Top 15 Destination States</h3>
+                    <div style="height: 600px;">
+                        <canvas id="destStatesChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Top 15 Origin States</h3>
+                    <div style="height: 600px;">
+                        <canvas id="origStatesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Top 5 Destination States (2010-2025)</h3>
+                <div style="height: 350px;">
+                    <canvas id="statesTrendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: TRADE INSIGHTS -->
+        <section id="insights" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-900">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">TRADE SURPLUS 2025</h3>
+                    <p class="text-3xl font-bold text-blue-900 mb-2" id="kpiSurplus">-</p>
+                    <p class="text-xs text-gray-500">Exports minus imports (tonnes)</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">CHINA SHARE OF EXPORTS</h3>
+                    <p class="text-3xl font-bold text-blue-500 mb-2" id="kpiChina">-</p>
+                    <p class="text-xs text-gray-500">Share of 2025 export tonnage</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-emerald-600">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">CABOTAGE SHARE 2025</h3>
+                    <p class="text-3xl font-bold text-emerald-600 mb-2" id="kpiCabotage">-</p>
+                    <p class="text-xs text-gray-500">Domestic coastal shipping</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-teal-600">
+                    <h3 class="text-gray-600 text-sm font-semibold mb-2">INLAND WATERWAY VS 2010</h3>
+                    <p class="text-3xl font-bold text-teal-600 mb-2" id="kpiInland">-</p>
+                    <p class="text-xs text-gray-500">Growth of river navigation</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Trade Balance by Year (Mt)</h3>
+                    <div style="height: 350px;">
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">China's Share of Brazilian Exports (%)</h3>
+                    <div style="height: 350px;">
+                        <canvas id="chinaShareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Cabotage & Inland Waterway Share of Total (%)</h3>
+                    <div style="height: 350px;">
+                        <canvas id="navShareChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Top 10 Domestic Cabotage Routes (2010-2024, Mt)</h3>
+                    <div style="height: 350px;">
+                        <canvas id="cabRoutesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-gray-400 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <p class="text-sm">Source: ANTAQ Waterway Statistics | Developed by <a class="credit" href="https://ribeirocunha.com/" target="_blank" rel="noopener">Darliane Ribeiro Cunha, PhD</a></p>
+            <p class="text-xs mt-2 text-gray-500">Data period: 2010-2025 | Last updated: April 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        // ===== EMBEDDED DATA =====
+        const dashboardData = {"kpis": {"total_2025": 1405079269.38, "total_2024": 1210322932.24, "variacao_pct": 16.09, "embarcados_2025": 948197507.13, "desembarcados_2025": 456881762.25, "total_paises_export": 202, "total_paises_import": 197, "total_periodo": 17358147309.69}, "yearly": [{"year": "2010", "total": 840153698.4}, {"year": "2011", "total": 887052637.36}, {"year": "2012", "total": 904398744.29}, {"year": "2013", "total": 929351411.16}, {"year": "2014", "total": 968881663.82}, {"year": "2015", "total": 1008304646.19}, {"year": "2016", "total": 1002807766.67}, {"year": "2017", "total": 1087759832.21}, {"year": "2018", "total": 1123323033.3}, {"year": "2019", "total": 1104802836.82}, {"year": "2020", "total": 1154902240.89}, {"year": "2021", "total": 1207769335.68}, {"year": "2022", "total": 1219388313.19}, {"year": "2023", "total": 1303848948.09}, {"year": "2024", "total": 1210322932.24}, {"year": "2025", "total": 1405079269.38}], "yearlyCarga": [{"year": "2010", "Containerised": 74166616.28, "General Cargo": 44981010.58, "Liquid & Gas Bulk": 209892402.06, "Dry Bulk": 511113669.48}, {"year": "2011", "Containerised": 84291120.98, "General Cargo": 46027025.51, "Liquid & Gas Bulk": 212417820.64, "Dry Bulk": 544316670.23}, {"year": "2012", "Containerised": 87337217.65, "General Cargo": 44905346.43, "Liquid & Gas Bulk": 217457054.47, "Dry Bulk": 554699125.75}, {"year": "2013", "Containerised": 97493576.04, "General Cargo": 43449095.11, "Liquid & Gas Bulk": 219281074.1, "Dry Bulk": 569127665.9}, {"year": "2014", "Containerised": 101129515.64, "General Cargo": 46045564.41, "Liquid & Gas Bulk": 232229869.21, "Dry Bulk": 589476714.56}, {"year": "2015", "Containerised": 100428874.95, "General Cargo": 47878644.55, "Liquid & Gas Bulk": 226878874.67, "Dry Bulk": 633118252.04}, {"year": "2016", "Containerised": 100151383.55, "General Cargo": 50406697.58, "Liquid & Gas Bulk": 221859963.91, "Dry Bulk": 630389721.63}, {"year": "2017", "Containerised": 107591069.6, "General Cargo": 53410835.28, "Liquid & Gas Bulk": 230727448.06, "Dry Bulk": 696030479.26}, {"year": "2018", "Containerised": 113312670.63, "General Cargo": 58012576.37, "Liquid & Gas Bulk": 235375341.78, "Dry Bulk": 716622444.52}, {"year": "2019", "Containerised": 116936389.63, "General Cargo": 54342953.6, "Liquid & Gas Bulk": 252108997.83, "Dry Bulk": 681414495.77}, {"year": "2020", "Containerised": 119837344.9, "General Cargo": 53932484.2, "Liquid & Gas Bulk": 289545286.67, "Dry Bulk": 691587125.12}, {"year": "2021", "Containerised": 132990491.57, "General Cargo": 59390104.36, "Liquid & Gas Bulk": 308654957.87, "Dry Bulk": 706733781.88}, {"year": "2022", "Containerised": 128385640.53, "General Cargo": 62011915.94, "Liquid & Gas Bulk": 313551971.7, "Dry Bulk": 715438785.01}, {"year": "2023", "Containerised": 127772243.54, "General Cargo": 60196462.43, "Liquid & Gas Bulk": 325385387.58, "Dry Bulk": 790494854.53}, {"year": "2024", "Containerised": 138475282.15, "General Cargo": 57519626.86, "Liquid & Gas Bulk": 286981981.46, "Dry Bulk": 727346041.77}, {"year": "2025", "General Cargo": 66170434.01, "Liquid & Gas Bulk": 334237459.38, "Dry Bulk": 840828765.42, "Containerised": 163842610.57}], "yearlySentido": [{"year": "2010", "Exports": 562732174.4, "Imports": 277421523.99}, {"year": "2011", "Imports": 293914931.03, "Exports": 593137706.34}, {"year": "2012", "Exports": 606416831.41, "Imports": 297981912.88}, {"year": "2013", "Exports": 619277559.34, "Imports": 310073851.81}, {"year": "2014", "Exports": 642267261.07, "Imports": 326614402.75}, {"year": "2015", "Imports": 312215785.53, "Exports": 696088860.67}, {"year": "2016", "Imports": 307913952.8, "Exports": 694893813.87}, {"year": "2017", "Imports": 332764398.67, "Exports": 754995433.53}, {"year": "2018", "Exports": 779343269.68, "Imports": 343979763.62}, {"year": "2019", "Exports": 748355964.28, "Imports": 356446872.55}, {"year": "2020", "Imports": 377936164.37, "Exports": 776966076.51}, {"year": "2021", "Imports": 415921844.01, "Exports": 791847491.66}, {"year": "2022", "Imports": 404644155.73, "Exports": 814744157.45}, {"year": "2023", "Exports": 890347303.41, "Imports": 413501644.68}, {"year": "2024", "Imports": 394316421.65, "Exports": 816006510.59}, {"year": "2025", "Exports": 948197507.13, "Imports": 456881762.25}], "yearlyInst": [{"year": "2010", "Organised Port": 297152610.2, "Private Terminal": 543001088.2}, {"year": "2011", "Organised Port": 310499695.9, "Private Terminal": 576552941.46}, {"year": "2012", "Organised Port": 316839392.53, "Private Terminal": 587559351.76}, {"year": "2013", "Organised Port": 336686332.89, "Private Terminal": 592665078.26}, {"year": "2014", "Organised Port": 348827150.95, "Private Terminal": 620054512.87}, {"year": "2015", "Organised Port": 351635888.73, "Private Terminal": 656668757.47}, {"year": "2016", "Organised Port": 342849451.55, "Private Terminal": 659958315.12}, {"year": "2017", "Organised Port": 365063555.19, "Private Terminal": 722696277.01}, {"year": "2018", "Organised Port": 374807151.4, "Private Terminal": 748515881.9}, {"year": "2019", "Organised Port": 371599998.43, "Private Terminal": 733202838.4}, {"year": "2020", "Organised Port": 392348777.02, "Private Terminal": 762553463.86}, {"year": "2021", "Organised Port": 409422173.16, "Private Terminal": 798347162.51}, {"year": "2022", "Organised Port": 422210418.97, "Private Terminal": 797177894.21}, {"year": "2023", "Organised Port": 451224265.54, "Private Terminal": 852624682.55}, {"year": "2024", "Organised Port": 438226173.33, "Private Terminal": 772096758.91}, {"year": "2025", "Organised Port": 497650258.73, "Private Terminal": 907429010.66}], "yearlyNav": [{"year": "2010", "Deep Sea": 622043696.78, "Cabotage": 182097019.44, "Port Support": 4586784.52, "Inland Waterway": 29588864.9, "Maritime Support": 1837332.76}, {"year": "2011", "Deep Sea": 657469165.47, "Cabotage": 192413584.65, "Port Support": 3872005.38, "Inland Waterway": 30934452.31, "Maritime Support": 2363429.55}, {"year": "2012", "Deep Sea": 670542771.51, "Cabotage": 197492126.19, "Inland Waterway": 31893039.46, "Port Support": 1169309.66, "Maritime Support": 3301497.47}, {"year": "2013", "Deep Sea": 684196228.02, "Cabotage": 205224681.65, "Port Support": 1354483.07, "Inland Waterway": 36046139.53, "Maritime Support": 2529878.88}, {"year": "2014", "Deep Sea": 713628715.52, "Maritime Support": 2937056.66, "Cabotage": 211754415.34, "Port Support": 1649918.67, "Inland Waterway": 38911557.64}, {"year": "2015", "Deep Sea": 753977451.49, "Port Support": 2284643.3, "Cabotage": 210772450.13, "Inland Waterway": 38771580.09, "Maritime Support": 2498521.18}, {"year": "2016", "Cabotage": 213964146.13, "Deep Sea": 743438846.03, "Port Support": 2460500.27, "Inland Waterway": 41357276.15, "Maritime Support": 1586998.1}, {"year": "2017", "Deep Sea": 804519752.2, "Cabotage": 222732805.03, "Port Support": 1862471.79, "Maritime Support": 1807649.97, "Inland Waterway": 56837153.21}, {"year": "2018", "Deep Sea": 825338494.49, "Cabotage": 231493045.81, "Port Support": 2301559.89, "Inland Waterway": 61758793.37, "Maritime Support": 2431139.74}, {"year": "2019", "Port Support": 2205089.55, "Deep Sea": 794708873.13, "Cabotage": 240935164.91, "Inland Waterway": 65419195.19, "Maritime Support": 1534514.04}, {"year": "2020", "Deep Sea": 809833183.32, "Cabotage": 271570630.61, "Port Support": 2051216.54, "Inland Waterway": 70085726.97, "Maritime Support": 1361483.44}, {"year": "2021", "Deep Sea": 855887723.92, "Inland Waterway": 66304363.53, "Port Support": 2446045.39, "Cabotage": 282053799.52, "Maritime Support": 1077403.31}, {"year": "2022", "Cabotage": 285487506.12, "Deep Sea": 855166702.54, "Port Support": 2222339.05, "Inland Waterway": 75477906.2, "Maritime Support": 1033859.28}, {"year": "2023", "Deep Sea": 926943342.77, "Cabotage": 290875790.78, "Inland Waterway": 82834894.75, "Port Support": 1973477.23, "Maritime Support": 1221442.56}, {"year": "2024", "Deep Sea": 869565204.29, "Cabotage": 268305938.9, "Port Support": 1460407.38, "Inland Waterway": 69893332.74, "Maritime Support": 1098048.93}, {"year": "2025", "Deep Sea": 1006069235.4, "Outros": 1266056.62, "Inland Waterway": 92431869.76, "Maritime Support": 1399688.63, "Cabotage": 303597617.96, "Port Support": 314801.0}], "topUFsDestino": [{"uf": "SP", "total": 1470056014.99}, {"uf": "RJ", "total": 1075155563.68}, {"uf": "PA", "total": 609429431.88}, {"uf": "RS", "total": 504271441.0}, {"uf": "MA", "total": 495424471.58}, {"uf": "SC", "total": 475693961.25}, {"uf": "AM", "total": 468892501.58}, {"uf": "BA", "total": 455695378.03}, {"uf": "ES", "total": 406997250.64}, {"uf": "PR", "total": 333499212.48}, {"uf": "PE", "total": 330923884.37}, {"uf": "CE", "total": 307697610.27}, {"uf": "RN", "total": 58826397.12}, {"uf": "RO", "total": 29932259.69}, {"uf": "ZEE/Plat. Continental", "total": 28004819.01}], "topUFsOrigem": [{"uf": "MA", "total": 2761769866.41}, {"uf": "RJ", "total": 2583041705.78}, {"uf": "ES", "total": 2091179526.94}, {"uf": "SP", "total": 1765362324.69}, {"uf": "ZEE/Plat. Continental", "total": 1540828839.77}, {"uf": "PA", "total": 1165395411.03}, {"uf": "RS", "total": 595761253.18}, {"uf": "PR", "total": 558415506.29}, {"uf": "BA", "total": 410337271.53}, {"uf": "SC", "total": 396417066.91}, {"uf": "AM", "total": 290733922.87}, {"uf": "RO", "total": 208134199.21}, {"uf": "PE", "total": 196382503.69}, {"uf": "RN", "total": 142281511.42}, {"uf": "CE", "total": 118768739.19}], "topExport": [{"country": "China", "total": 4690594336.81}, {"country": "Netherlands", "total": 462139851.88}, {"country": "Japan", "total": 458187699.13}, {"country": "United States", "total": 432623791.37}, {"country": "Malaysia", "total": 313491966.18}, {"country": "South Korea", "total": 262839127.27}, {"country": "Spain", "total": 227838817.37}, {"country": "Singapore", "total": 224057637.03}, {"country": "Argentina", "total": 179198248.9}, {"country": "Italy", "total": 148189168.37}, {"country": "Oman", "total": 139469219.52}, {"country": "France", "total": 133234947.48}, {"country": "Philippines", "total": 120528612.61}, {"country": "Canada", "total": 113814732.21}, {"country": "Bahrain", "total": 110523543.75}, {"country": "Egypt", "total": 103817136.84}, {"country": "Germany", "total": 101302052.87}, {"country": "Iran", "total": 99400208.93}, {"country": "India", "total": 99150478.63}, {"country": "Turkey", "total": 97935692.21}], "topImport": [{"country": "United States", "total": 516668289.4}, {"country": "China", "total": 255916852.46}, {"country": "Argentina", "total": 152512409.35}, {"country": "Russia", "total": 141061795.6}, {"country": "Colombia", "total": 95312165.23}, {"country": "Nigeria", "total": 82429045.09}, {"country": "Australia", "total": 81543012.74}, {"country": "Spain", "total": 75507678.11}, {"country": "Saudi Arabia", "total": 69521050.81}, {"country": "Canada", "total": 67533276.67}, {"country": "Algeria", "total": 51825174.93}, {"country": "Morocco", "total": 51696681.67}, {"country": "Belgium", "total": 49408151.3}, {"country": "Chile", "total": 47229628.68}, {"country": "Germany", "total": 41165221.19}, {"country": "Netherlands", "total": 40880998.9}, {"country": "India", "total": 37933353.03}, {"country": "Peru", "total": 28789807.52}, {"country": "South Korea", "total": 27874454.97}, {"country": "Singapore", "total": 26961557.75}], "cargoLatest": [{"cargo": "Dry Bulk", "total": 840828765.42}, {"cargo": "Liquid & Gas Bulk", "total": 334237459.38}, {"cargo": "Containerised", "total": 163842610.57}, {"cargo": "General Cargo", "total": 66170434.01}], "navLatest": [{"type": "Deep Sea", "total": 1006069235.4}, {"type": "Cabotage", "total": 303597617.96}, {"type": "Inland Waterway", "total": 92431869.76}, {"type": "Maritime Support", "total": 1399688.63}, {"type": "Outros", "total": 1266056.62}, {"type": "Port Support", "total": 314801.0}], "top5ExportCountries": ["China", "Netherlands", "Japan", "United States", "Malaysia"], "top5ImportCountries": ["United States", "China", "Argentina", "Russia", "Colombia"], "top5UFs": ["SP", "RJ", "PA", "RS", "MA"], "yearlyUF": [{"year": "2010", "PA": 22778473.33, "RS": 18868620.84, "RJ": 42988992.9, "SP": 88078591.79, "MA": 21363404.94}, {"year": "2011", "SP": 89619580.33, "PA": 26177752.38, "RS": 26491958.2, "RJ": 45865194.2, "MA": 26721829.15}, {"year": "2012", "PA": 23720252.48, "RS": 26389120.08, "RJ": 49926196.19, "SP": 86492204.46, "MA": 27372139.69}, {"year": "2013", "RS": 31151840.69, "SP": 90791652.07, "PA": 23627922.54, "RJ": 48660598.9, "MA": 28225580.33}, {"year": "2014", "MA": 30910310.4, "SP": 89536284.42, "PA": 23922655.23, "RJ": 51853016.4, "RS": 33071199.17}, {"year": "2015", "PA": 26866766.52, "RJ": 47087881.38, "RS": 31566197.24, "SP": 83008678.63, "MA": 32489863.26}, {"year": "2016", "RS": 34341727.16, "PA": 26751984.46, "SP": 79822846.24, "RJ": 46190651.99, "MA": 29959416.16}, {"year": "2017", "RS": 32330548.92, "RJ": 50908920.42, "PA": 36497504.25, "SP": 85141597.14, "MA": 31537690.23}, {"year": "2018", "RJ": 56486557.46, "RS": 35197958.28, "PA": 35234258.9, "SP": 85107235.22, "MA": 31746626.22}, {"year": "2019", "PA": 40905928.15, "SP": 87454123.1, "RJ": 69080028.31, "RS": 32284445.92, "MA": 31323124.53}, {"year": "2020", "RS": 33728715.71, "SP": 90806667.6, "RJ": 82057521.99, "MA": 34068836.16, "PA": 49411866.43}, {"year": "2021", "RJ": 92255180.94, "SP": 101730687.16, "MA": 34638034.03, "PA": 45449873.36, "RS": 38203570.66}, {"year": "2022", "SP": 104709487.68, "PA": 56234387.91, "RJ": 89732286.73, "RS": 31225751.11, "MA": 34597262.65}, {"year": "2023", "RS": 32602076.86, "SP": 102969200.79, "PA": 56016070.75, "RJ": 98922255.94, "MA": 33230190.25}, {"year": "2024", "SP": 96320273.66, "RJ": 91893763.4, "PA": 53014900.43, "RS": 30563205.38, "MA": 31537483.21}, {"year": "2025", "RS": 36254504.77, "PA": 62818834.79, "SP": 108466904.7, "RJ": 111246516.52, "MA": 35702680.36}], "yearlyExport": [{"year": "2010", "Malaysia": 3856882.73, "Japan": 54503616.45, "United States": 18245680.72, "China": 141252346.59, "Netherlands": 34244251.03}, {"year": "2011", "Malaysia": 4707347.03, "Japan": 40742863.4, "Netherlands": 42647354.27, "United States": 21371844.98, "China": 194127344.3}, {"year": "2012", "Malaysia": 5638234.78, "Japan": 36208096.06, "Netherlands": 36083255.69, "China": 205556911.36, "United States": 22155320.5}, {"year": "2013", "Malaysia": 4526505.67, "China": 202857639.79, "Japan": 34754876.1, "Netherlands": 40365407.89, "United States": 23028177.69}, {"year": "2014", "Japan": 33343434.92, "Malaysia": 6519196.93, "United States": 25267082.1, "China": 216671753.37, "Netherlands": 33888745.23}, {"year": "2015", "Japan": 35496034.27, "United States": 26055092.35, "Malaysia": 25662903.67, "China": 251242818.59, "Netherlands": 35848098.66}, {"year": "2016", "Japan": 33875493.57, "United States": 24782742.94, "Malaysia": 31076499.19, "China": 277222350.37, "Netherlands": 34971528.26}, {"year": "2017", "Malaysia": 30985272.28, "Japan": 29736803.41, "Netherlands": 31145032.74, "China": 307110290.61, "United States": 28429913.47}, {"year": "2018", "Malaysia": 29118721.65, "Japan": 22283073.05, "China": 335771650.86, "Netherlands": 30181759.68, "United States": 29108802.08}, {"year": "2019", "United States": 34195695.45, "Japan": 24704349.49, "China": 312250565.89, "Malaysia": 31222275.01, "Netherlands": 25723233.43}, {"year": "2020", "China": 350115097.8, "Japan": 17994696.87, "Malaysia": 27374254.27, "Netherlands": 19804141.92, "United States": 25532335.46}, {"year": "2021", "Japan": 20727555.19, "Malaysia": 25870661.67, "China": 345784168.08, "Netherlands": 20059783.2, "United States": 29063610.0}, {"year": "2022", "Japan": 18391788.79, "Malaysia": 23730680.09, "China": 333951674.57, "Netherlands": 19161416.38, "United States": 31614446.08}, {"year": "2023", "China": 405983110.29, "Japan": 20967104.89, "Malaysia": 23702928.63, "Netherlands": 17526643.5, "United States": 31956845.61}, {"year": "2024", "Malaysia": 20160544.07, "Netherlands": 19193730.49, "Japan": 14579811.12, "United States": 30516065.42, "China": 371323107.1}, {"year": "2025", "United States": 31300136.55, "Japan": 19878101.54, "Netherlands": 21295469.51, "China": 439373507.25, "Malaysia": 19339058.53}], "yearlyImport": [{"year": "2010", "Argentina": 7633131.42, "Colombia": 2743032.38, "United States": 22112613.87, "Russia": 2832548.09, "China": 7486652.32}, {"year": "2011", "Russia": 3808141.98, "Colombia": 2859144.03, "United States": 27046302.39, "China": 11209086.97, "Argentina": 9709298.46}, {"year": "2012", "Russia": 3406254.01, "Argentina": 9931479.35, "China": 10787653.41, "Colombia": 3556768.75, "United States": 26326657.07}, {"year": "2013", "Russia": 4013393.34, "United States": 29301932.38, "China": 13401679.33, "Colombia": 4253449.89, "Argentina": 7884311.91}, {"year": "2014", "Colombia": 5970926.8, "Russia": 4751142.85, "China": 15200961.34, "United States": 30616878.57, "Argentina": 6830399.34}, {"year": "2015", "Russia": 3833150.29, "China": 11709000.42, "Colombia": 7282544.4, "United States": 25532628.3, "Argentina": 8680091.22}, {"year": "2016", "Russia": 5515975.82, "Colombia": 7070136.58, "United States": 29495719.7, "Argentina": 10431029.05, "China": 9564902.19}, {"year": "2017", "Colombia": 7598848.12, "Argentina": 10058366.5, "Russia": 5957964.8, "United States": 35930389.36, "China": 10362970.11}, {"year": "2018", "Colombia": 8093647.0, "United States": 35031233.46, "Russia": 7057349.34, "Argentina": 11339635.48, "China": 12043590.95}, {"year": "2019", "China": 12366024.2, "United States": 39325795.36, "Colombia": 7104332.04, "Russia": 7872000.83, "Argentina": 10466551.99}, {"year": "2020", "Argentina": 9793541.36, "Colombia": 6118558.71, "China": 12799334.78, "United States": 39669864.24, "Russia": 8771777.31}, {"year": "2021", "Russia": 13535347.81, "China": 20369162.77, "Argentina": 11546731.26, "Colombia": 8984170.2, "United States": 42909288.83}, {"year": "2022", "United States": 37430831.1, "Argentina": 9500729.08, "China": 21397230.63, "Russia": 11505198.43, "Colombia": 5040577.64}, {"year": "2023", "United States": 29596565.44, "Russia": 18850708.15, "Colombia": 5448521.03, "Argentina": 8104445.63, "China": 23095832.08}, {"year": "2024", "United States": 29167968.09, "Colombia": 6022424.16, "Russia": 20760634.25, "Argentina": 9122762.46, "China": 27181910.76}, {"year": "2025", "China": 36940860.2, "United States": 37173621.23, "Colombia": 7165083.5, "Russia": 18590208.31, "Argentina": 11479904.83}]};
+
+        // ===== COLORS =====
+        const COLORS = {
+            navy: '#020617',
+            oceanBlue: '#0a8f93',
+            skyBlue: '#00bfc0',
+            emerald: '#20b46b',
+            teal: '#5ad7d9',
+            amber: '#e2bf76',
+            coral: '#d6584f',
+            purple: '#7c6ee6',
+            slate: '#76828b'
+        };
+
+        const countryColors = ['#020617', '#0a8f93', '#00bfc0', '#20b46b', '#e2bf76'];
+        const CABOTAGE_ROUTES = [{"route": "ZEE/Plat. Continental → RJ", "total": 547.6}, {"route": "ZEE/Plat. Continental → SP", "total": 516.4}, {"route": "PA → MA", "total": 270.9}, {"route": "PA → PA", "total": 137.3}, {"route": "ZEE/Plat. Continental → SC", "total": 120.6}, {"route": "ZEE/Plat. Continental → BA", "total": 100.1}, {"route": "ES → SP", "total": 83.7}, {"route": "ZEE/Plat. Continental → RS", "total": 83.2}, {"route": "BA → ES", "total": 73.7}, {"route": "MA → CE", "total": 59.3}];
+
+        // ===== UTILITIES =====
+        const formatMt = (v) => (v/1e6).toLocaleString('en-GB', {maximumFractionDigits:1}) + ' Mt';
+
+        Chart.defaults.font.family = "'Source Sans 3', -apple-system, sans-serif";
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = '#6b7280';
+
+        let charts = {};
+        let chartsInitialized = {};
+
+        function initChart(canvasId, config) {
+            if (charts[canvasId]) charts[canvasId].destroy();
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            charts[canvasId] = new Chart(ctx, config);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-blue-900', 'text-white', 'shadow-md');
+                b.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            document.getElementById('btn-' + tabId).classList.remove('bg-gray-100', 'text-gray-700');
+            document.getElementById('btn-' + tabId).classList.add('bg-blue-900', 'text-white', 'shadow-md');
+
+            // Initialize charts for this tab (lazy loading)
+            if (tabId === 'temporal' && !chartsInitialized['temporal']) {
+                initTemporalCharts();
+                chartsInitialized['temporal'] = true;
+            }
+            if (tabId === 'exports' && !chartsInitialized['exports']) {
+                initExportCharts();
+                chartsInitialized['exports'] = true;
+            }
+            if (tabId === 'imports' && !chartsInitialized['imports']) {
+                initImportCharts();
+                chartsInitialized['imports'] = true;
+            }
+            if (tabId === 'states' && !chartsInitialized['states']) {
+                initStateCharts();
+                chartsInitialized['states'] = true;
+            }
+            if (tabId === 'insights' && !chartsInitialized['insights']) {
+                initInsightsCharts();
+                chartsInitialized['insights'] = true;
+            }
+        }
+
+        function initInsightsCharts() {
+            const years = dashboardData.yearly.map(y => y.year);
+            const exp = dashboardData.yearlySentido.map(y => y['Exports']);
+            const imp = dashboardData.yearlySentido.map(y => y['Imports']);
+            const balance = exp.map((e, i) => (e - imp[i]) / 1e6);
+            const chinaShare = dashboardData.yearlyExport.map((y, i) => (y['China'] || 0) / exp[i] * 100);
+            const totals = dashboardData.yearly.map(y => y.total);
+            const cabShare = dashboardData.yearlyNav.map((y, i) => (y['Cabotage'] || 0) / totals[i] * 100);
+            const inlandShare = dashboardData.yearlyNav.map((y, i) => (y['Inland Waterway'] || 0) / totals[i] * 100);
+            // KPIs
+            const last = years.length - 1;
+            document.getElementById('kpiSurplus').textContent = '+' + balance[last].toLocaleString('en-GB', {maximumFractionDigits: 1}) + ' Mt';
+            document.getElementById('kpiChina').textContent = chinaShare[last].toFixed(1) + '%';
+            document.getElementById('kpiCabotage').textContent = cabShare[last].toFixed(1) + '%';
+            const inl0 = dashboardData.yearlyNav[0]['Inland Waterway'], inl1 = dashboardData.yearlyNav[last]['Inland Waterway'];
+            document.getElementById('kpiInland').textContent = (inl1 / inl0).toFixed(1) + 'x';
+
+            initChart('balanceChart', {
+                type: 'bar',
+                data: { labels: years, datasets: [{ label: 'Trade balance (Mt)', data: balance, backgroundColor: '#0a8f93', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => '+' + ctx.raw.toLocaleString('en-GB', {maximumFractionDigits: 1}) + ' Mt' } } },
+                    scales: { y: { title: { display: true, text: 'Mt' } } } }
+            });
+            initChart('chinaShareChart', {
+                type: 'line',
+                data: { labels: years, datasets: [{ label: "China's share of exports", data: chinaShare, borderColor: '#b98d3e', backgroundColor: 'rgba(226,191,118,0.15)', fill: true, tension: 0.3, pointRadius: 3 }] },
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ctx.raw.toFixed(1) + '%' } } },
+                    scales: { y: { min: 0, max: 60, ticks: { callback: v => v + '%' } } } }
+            });
+            initChart('navShareChart', {
+                type: 'line',
+                data: { labels: years, datasets: [
+                    { label: 'Cabotage', data: cabShare, borderColor: '#0a8f93', tension: 0.3, pointRadius: 2 },
+                    { label: 'Inland Waterway', data: inlandShare, borderColor: '#20b46b', tension: 0.3, pointRadius: 2 }
+                ] },
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + '%' } } },
+                    scales: { y: { min: 0, ticks: { callback: v => v + '%' } } } }
+            });
+            initChart('cabRoutesChart', {
+                type: 'bar',
+                data: { labels: CABOTAGE_ROUTES.map(r => r.route), datasets: [{ label: 'Total 2010-2024 (Mt)', data: CABOTAGE_ROUTES.map(r => r.total), backgroundColor: '#020617', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ctx.raw.toLocaleString('en-GB') + ' Mt' } } },
+                    scales: { x: { title: { display: true, text: 'Mt (cumulative 2010-2024)' } } } }
+            });
+        }
+
+        function initOverviewCharts() {
+            // Cargo doughnut
+            const cargoData = dashboardData.cargoLatest;
+            initChart('cargoChart', {
+                type: 'doughnut',
+                data: {
+                    labels: cargoData.map(c => c.cargo),
+                    datasets: [{
+                        data: cargoData.map(c => c.total),
+                        backgroundColor: ['#0a8f93', '#00bfc0', '#e2bf76', '#20b46b'],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 20 } },
+                        tooltip: { callbacks: { label: (ctx) => formatMt(ctx.raw) } }
+                    },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // Navigation doughnut
+            const navData = dashboardData.navLatest.slice(0, 3);
+            initChart('navChart', {
+                type: 'doughnut',
+                data: {
+                    labels: navData.map(n => n.type),
+                    datasets: [{
+                        data: navData.map(n => n.total),
+                        backgroundColor: [COLORS.navy, COLORS.oceanBlue, COLORS.skyBlue],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 20 } },
+                        tooltip: { callbacks: { label: (ctx) => formatMt(ctx.raw) } }
+                    },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // Line chart
+            const years = dashboardData.yearly.map(y => y.year);
+            const totals = dashboardData.yearly.map(y => y.total);
+            initChart('overviewLineChart', {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Total Movement',
+                        data: totals,
+                        borderColor: COLORS.oceanBlue,
+                        backgroundColor: 'rgba(26, 115, 167, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: COLORS.oceanBlue,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (ctx) => formatMt(ctx.raw) } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' }
+                        }
+                    },
+                    animation: { duration: 800 }
+                }
+            });
+        }
+
+        function initTemporalCharts() {
+            // Stacked area - cargo type
+            const years = dashboardData.yearly.map(y => y.year);
+            const cargoLabels = ['Dry Bulk', 'Liquid & Gas Bulk', 'Containerised', 'General Cargo'];
+            const cargoDatasets = cargoLabels.map((label, idx) => {
+                const colors = ['#8b6914', '#3498db', '#e74c3c', '#f39c12'];
+                return {
+                    label: label,
+                    data: dashboardData.yearlyCarga.map(y => y[label] || 0),
+                    borderColor: colors[idx],
+                    backgroundColor: colors[idx] + '99',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2
+                };
+            });
+
+            initChart('cargoTypeChart', {
+                type: 'line',
+                data: { labels: years, datasets: cargoDatasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { stacked: true, ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false } },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // Exports vs Imports line
+            const sentidoYears = dashboardData.yearlySentido.map(y => y.year);
+            initChart('sentidoChart', {
+                type: 'line',
+                data: {
+                    labels: sentidoYears,
+                    datasets: [
+                        {
+                            label: 'Exports',
+                            data: dashboardData.yearlySentido.map(y => y.Exports || 0),
+                            borderColor: COLORS.emerald,
+                            backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 3
+                        },
+                        {
+                            label: 'Imports',
+                            data: dashboardData.yearlySentido.map(y => y.Imports || 0),
+                            borderColor: COLORS.coral,
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false } },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // Stacked bar
+            const instYears = dashboardData.yearlyInst.map(y => y.year);
+            initChart('instChart', {
+                type: 'bar',
+                data: {
+                    labels: instYears,
+                    datasets: [
+                        {
+                            label: 'Organised Port',
+                            data: dashboardData.yearlyInst.map(y => y['Organised Port'] || 0),
+                            backgroundColor: COLORS.oceanBlue
+                        },
+                        {
+                            label: 'Private Terminal',
+                            data: dashboardData.yearlyInst.map(y => y['Private Terminal'] || 0),
+                            backgroundColor: COLORS.skyBlue
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { position: 'bottom' } },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // Navigation types
+            const navYears = dashboardData.yearlyNav.map(y => y.year);
+            initChart('navTypesChart', {
+                type: 'line',
+                data: {
+                    labels: navYears,
+                    datasets: [
+                        {
+                            label: 'Deep Sea',
+                            data: dashboardData.yearlyNav.map(y => y['Deep Sea'] || 0),
+                            borderColor: COLORS.navy,
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 2,
+                            fill: false
+                        },
+                        {
+                            label: 'Cabotage',
+                            data: dashboardData.yearlyNav.map(y => y.Cabotage || 0),
+                            borderColor: COLORS.oceanBlue,
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 2,
+                            fill: false
+                        },
+                        {
+                            label: 'Inland Waterway',
+                            data: dashboardData.yearlyNav.map(y => y['Inland Waterway'] || 0),
+                            borderColor: COLORS.skyBlue,
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 2,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false } },
+                    animation: { duration: 800 }
+                }
+            });
+        }
+
+        function initExportCharts() {
+            // Horizontal bar - top 20 exports
+            const topExp = dashboardData.topExport;
+            initChart('topExportChart', {
+                type: 'bar',
+                data: {
+                    labels: topExp.map(e => e.country),
+                    datasets: [{
+                        label: 'Export Volume (Mt)',
+                        data: topExp.map(e => e.total),
+                        backgroundColor: COLORS.oceanBlue,
+                        borderColor: COLORS.navy,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { display: true, position: 'bottom' } },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // Line - top 5 export partners
+            const top5Exp = dashboardData.top5ExportCountries;
+            const expYears = dashboardData.yearlyExport.map(y => y.year);
+            const expDatasets = top5Exp.map((country, idx) => ({
+                label: country,
+                data: dashboardData.yearlyExport.map(y => y[country] || 0),
+                borderColor: countryColors[idx],
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 2,
+                fill: false
+            }));
+
+            initChart('exportTrendChart', {
+                type: 'line',
+                data: { labels: expYears, datasets: expDatasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false } },
+                    animation: { duration: 800 }
+                }
+            });
+        }
+
+        function initImportCharts() {
+            // Horizontal bar - top 20 imports
+            const topImp = dashboardData.topImport;
+            initChart('topImportChart', {
+                type: 'bar',
+                data: {
+                    labels: topImp.map(i => i.country),
+                    datasets: [{
+                        label: 'Import Volume (Mt)',
+                        data: topImp.map(i => i.total),
+                        backgroundColor: COLORS.emerald,
+                        borderColor: COLORS.teal,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { display: true, position: 'bottom' } },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // Line - top 5 import partners
+            const top5Imp = dashboardData.top5ImportCountries;
+            const impYears = dashboardData.yearlyImport.map(y => y.year);
+            const impDatasets = top5Imp.map((country, idx) => ({
+                label: country,
+                data: dashboardData.yearlyImport.map(y => y[country] || 0),
+                borderColor: countryColors[idx],
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 2,
+                fill: false
+            }));
+
+            initChart('importTrendChart', {
+                type: 'line',
+                data: { labels: impYears, datasets: impDatasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false } },
+                    animation: { duration: 800 }
+                }
+            });
+        }
+
+        function initStateCharts() {
+            // Destination states
+            const destUF = dashboardData.topUFsDestino;
+            initChart('destStatesChart', {
+                type: 'bar',
+                data: {
+                    labels: destUF.map(u => u.uf),
+                    datasets: [{
+                        label: 'Destination Volume (Mt)',
+                        data: destUF.map(u => u.total),
+                        backgroundColor: COLORS.skyBlue,
+                        borderColor: COLORS.oceanBlue,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { display: true, position: 'bottom' } },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // Origin states
+            const origUF = dashboardData.topUFsOrigem;
+            initChart('origStatesChart', {
+                type: 'bar',
+                data: {
+                    labels: origUF.map(u => u.uf),
+                    datasets: [{
+                        label: 'Origin Volume (Mt)',
+                        data: origUF.map(u => u.total),
+                        backgroundColor: COLORS.emerald,
+                        borderColor: COLORS.teal,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { display: true, position: 'bottom' } },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // Top 5 states trend
+            const top5Uf = dashboardData.top5UFs;
+            const ufYears = dashboardData.yearlyUF.map(y => y.year);
+            const ufDatasets = top5Uf.map((uf, idx) => ({
+                label: uf,
+                data: dashboardData.yearlyUF.map(y => y[uf] || 0),
+                borderColor: countryColors[idx],
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 2,
+                fill: false
+            }));
+
+            initChart('statesTrendChart', {
+                type: 'line',
+                data: { labels: ufYears, datasets: ufDatasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { ticks: { callback: (val) => (val / 1e9).toFixed(1) + 'B' } } },
+                    plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false } },
+                    animation: { duration: 800 }
+                }
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initOverviewCharts();
+        });
+    </script>
+</body>
+</html>
